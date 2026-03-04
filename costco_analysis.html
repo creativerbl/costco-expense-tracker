@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Enhanced Costco Analyzer + Explorer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card-bg: #ffffff;
+      --accent: #2563eb;
+      --accent-soft: #e0edff;
+      --border: #e5e7eb;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --radius-lg: 18px;
+      --shadow-soft: 0 10px 25px rgba(15, 23, 42, 0.05);
+      --success: #16a34a;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+      padding-bottom: 60px;
+    }
+
+    .page {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 22px 16px;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.65rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .uploader {
+      padding: 10px 16px;
+      background: var(--card-bg);
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.9rem;
+    }
+
+    .status {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+      text-align: right;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin: 16px 0 10px;
+    }
+
+    .filter {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .filter label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .filter input, .filter select {
+      width: 100%;
+      padding: 10px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 12px 0 6px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    button {
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      box-shadow: var(--shadow-soft);
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button:hover { border-color: #cbd5e1; }
+
+    .section-header {
+      font-size: 1.25rem;
+      font-weight: 800;
+      margin: 26px 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 980px) {
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--border);
+    }
+
+    .card h2 {
+      margin: 0 0 4px;
+      font-size: 1.05rem;
+    }
+
+    .card .subtitle {
+      margin: 0 0 12px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .stat {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat .k { font-size: 0.78rem; color: var(--text-muted); }
+    .stat .v { font-size: 1.15rem; font-weight: 900; margin-top: 4px; }
+
+    .scroll-list {
+      max-height: 520px;
+      overflow-y: auto;
+      padding-right: 6px;
+      border-radius: 12px;
+    }
+
+    .scroll-list::-webkit-scrollbar { width: 8px; }
+    .scroll-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.84rem;
+    }
+
+    thead {
+      background: var(--accent-soft);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    th, td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th:last-child, td:last-child { text-align: right; }
+    tbody tr:nth-child(even) { background: #f9fafb; }
+
+    .money { font-variant-numeric: tabular-nums; font-weight: 750; }
+    .neg { color: var(--danger); }
+    .pos { color: var(--success); }
+    .warn { color: var(--warn); font-weight: 800; }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      background: #f3f4f6;
+      color: #111827;
+      border: 1px solid var(--border);
+      margin-left: 6px;
+      white-space: nowrap;
+    }
+
+    .pill.warn {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      color: #9a3412;
+      font-weight: 900;
+    }
+
+    .pill.clickable { cursor: pointer; }
+    .pill.clickable:hover { border-color: #cbd5e1; }
+
+    .hint {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      margin-top: 8px;
+      line-height: 1.3;
+    }
+
+    .small { font-size: 0.82rem; color: var(--text-muted); }
+
+    .click-row { cursor: pointer; }
+    .click-row:hover { background: #eef2ff !important; }
+
+    canvas { width: 100% !important; height: 280px !important; }
+
+    /* ⭐ New: Search row inside Matching Items card */
+    .inline-search {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin: 10px 0 12px;
+    }
+
+    .inline-search input {
+      flex: 1;
+      padding: 10px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 0.92rem;
+      outline: none;
+      background: #fff;
+    }
+
+    .inline-search button {
+      padding: 9px 14px;
+      font-weight: 800;
+    }
+
+    /* ⭐ Sortable headers */
+    th.sortable {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+
+    th.sortable:hover {
+      filter: brightness(0.98);
+    }
+
+    th.sortable .sort-ind {
+      font-size: 0.75rem;
+      margin-left: 6px;
+      color: #334155;
+      opacity: 0.8;
+    }
+
+    /* ⭐ Scroll highlight pulse for chart card */
+    .flash {
+      animation: flashGlow 1.2s ease-in-out;
+    }
+
+    @keyframes flashGlow {
+      0%   { box-shadow: 0 0 0 rgba(37, 99, 235, 0); }
+      30%  { box-shadow: 0 0 28px rgba(37, 99, 235, 0.35); }
+      100% { box-shadow: 0 0 0 rgba(37, 99, 235, 0); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <header>
+      <h1>🧾 Enhanced Costco Analyzer + Explorer</h1>
+      <div>
+        <div class="uploader">
+          <label><strong>Upload JSON</strong></label>
+          <input type="file" id="fileInput" accept=".json" />
+        </div>
+        <div class="status" id="status">No file loaded.</div>
+      </div>
+    </header>
+
+    <!-- Filters -->
+    <div class="filters">
+      <div class="filter">
+        <label>Date From</label>
+        <input type="date" id="dateFrom" />
+      </div>
+
+      <div class="filter">
+        <label>Date To</label>
+        <input type="date" id="dateTo" />
+      </div>
+
+      <div class="filter">
+        <label>Warehouse</label>
+        <select id="warehouseFilter">
+          <option value="ALL">All Warehouses</option>
+        </select>
+      </div>
+
+      <div class="filter">
+        <label>Receipt Type</label>
+        <select id="receiptType">
+          <option value="BOTH">Purchases + Refunds</option>
+          <option value="PURCHASE">Purchases Only</option>
+          <option value="REFUND">Refunds Only</option>
+        </select>
+      </div>
+
+      <div class="filter">
+        <label>Top N Items</label>
+        <select id="topN">
+          <option value="10">Top 10</option>
+          <option value="20">Top 20</option>
+          <option value="50">Top 50</option>
+          <option value="ALL">All</option>
+        </select>
+      </div>
+
+      <div class="filter">
+        <label>Outlier Sensitivity</label>
+        <select id="outlierSigma">
+          <option value="2.0">2.0σ (Sensitive)</option>
+          <option value="2.5" selected>2.5σ (Default)</option>
+          <option value="3.0">3.0σ (Strict)</option>
+        </select>
+      </div>
+
+      <div class="filter">
+        <label>Receipts Search</label>
+        <input id="receiptSearch" placeholder="Search warehouse/type/date" />
+      </div>
+
+      <div class="filter">
+        <label>Global Item Search (optional)</label>
+        <input id="globalItemSearch" placeholder="Search name or item #" />
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button id="resetFilters">Reset Filters</button>
+      <button id="applyFilters">Apply Filters</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="section-header">Quick Stats</div>
+    <div class="stats" id="stats"></div>
+
+    <!-- Charts -->
+    <div class="section-header">Charts</div>
+    <div class="row">
+      <div class="card">
+        <h2>Total Spend Over Time</h2>
+        <p class="subtitle">Net spend per month (after instant savings & returns)</p>
+        <canvas id="spendOverTime"></canvas>
+      </div>
+
+      <div class="card">
+        <h2>Category Spend Share</h2>
+        <p class="subtitle">Share of net spend by department</p>
+        <canvas id="categoryShare"></canvas>
+      </div>
+
+      <div class="card">
+        <h2>Discount Trend Over Time</h2>
+        <p class="subtitle">Instant savings applied per month</p>
+        <canvas id="discountTrend"></canvas>
+      </div>
+    </div>
+
+    <!-- Explorer -->
+    <div class="section-header">Receipt Explorer</div>
+    <div class="two-col">
+      <div class="card">
+        <h2>Receipts</h2>
+        <p class="subtitle">Click a receipt to view all line items & discounts</p>
+        <div class="scroll-list" style="max-height: 520px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Warehouse</th>
+                <th>Type</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="receiptList"></tbody>
+          </table>
+        </div>
+        <div class="hint">Tip: Refund receipts are included when “Purchases + Refunds” is selected.</div>
+      </div>
+
+      <div class="card" id="receiptDetailCard">
+        <h2>Receipt Details</h2>
+        <p class="subtitle">Select a receipt on the left</p>
+        <div id="receiptDetail"></div>
+      </div>
+    </div>
+
+    <!-- Item Search / Price History -->
+    <div class="section-header">Item Search + Price History</div>
+    <div class="two-col">
+      <div class="card" id="matchingItemsCard">
+        <h2>Matching Items</h2>
+        <p class="subtitle">Search by item name or item number</p>
+
+        <!-- ✅ NEW: Inline Search Box here -->
+        <div class="inline-search">
+          <input id="matchingItemSearch" placeholder="Search within matching items (name or #)" />
+          <button id="clearMatchingSearch">Clear</button>
+        </div>
+
+        <div class="scroll-list" style="max-height: 520px;">
+          <table>
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="name">
+                  Item <span class="sort-ind" id="sortInd-name"></span>
+                </th>
+                <th class="sortable" data-sort="qty">
+                  Qty <span class="sort-ind" id="sortInd-qty"></span>
+                </th>
+                <th class="sortable" data-sort="unit">
+                  Unit <span class="sort-ind" id="sortInd-unit"></span>
+                </th>
+                <th class="sortable" data-sort="net">
+                  Net <span class="sort-ind" id="sortInd-net"></span>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="itemResults"></tbody>
+          </table>
+        </div>
+
+        <div class="hint">Click any item row to render its price history graph on the right.</div>
+      </div>
+
+      <div class="card" id="priceHistoryCard">
+        <h2 id="priceHistoryTitle">Price History</h2>
+        <p class="subtitle" id="priceHistorySub">Select an item</p>
+        <canvas id="priceHistoryChart"></canvas>
+        <div class="small" id="priceHistoryMeta"></div>
+      </div>
+    </div>
+
+    <!-- Most Discounted -->
+    <div class="section-header">Most Discounted Items</div>
+    <div class="grid-3" id="discountTiles"></div>
+
+    <!-- Categories -->
+    <div class="section-header">Top Spending Categories</div>
+    <div class="grid-3" id="categoryTiles"></div>
+  </div>
+
+<script>
+  // DOM
+  const fileInput = document.getElementById("fileInput");
+  const statusEl = document.getElementById("status");
+
+  const dateFromEl = document.getElementById("dateFrom");
+  const dateToEl = document.getElementById("dateTo");
+  const warehouseFilterEl = document.getElementById("warehouseFilter");
+  const receiptTypeEl = document.getElementById("receiptType");
+  const topNEl = document.getElementById("topN");
+  const outlierSigmaEl = document.getElementById("outlierSigma");
+
+  const receiptSearchEl = document.getElementById("receiptSearch");
+  const globalItemSearchEl = document.getElementById("globalItemSearch");
+
+  const matchingItemSearchEl = document.getElementById("matchingItemSearch");
+  const clearMatchingSearchBtn = document.getElementById("clearMatchingSearch");
+
+  const resetFiltersBtn = document.getElementById("resetFilters");
+  const applyFiltersBtn = document.getElementById("applyFilters");
+
+  const statsEl = document.getElementById("stats");
+  const categoryTilesEl = document.getElementById("categoryTiles");
+  const discountTilesEl = document.getElementById("discountTiles");
+
+  const receiptListEl = document.getElementById("receiptList");
+  const receiptDetailEl = document.getElementById("receiptDetail");
+
+  const itemResultsEl = document.getElementById("itemResults");
+  const priceHistoryTitleEl = document.getElementById("priceHistoryTitle");
+  const priceHistorySubEl = document.getElementById("priceHistorySub");
+  const priceHistoryMetaEl = document.getElementById("priceHistoryMeta");
+
+  // State
+  let rawReceipts = [];
+  let filteredReceipts = [];
+  let normalizedItems = [];
+  let categories = [];
+  let charts = {};
+  let priceChart = null;
+
+  // NEW: Sort state for matching items
+  let matchingSort = { key: "net", dir: "desc" }; // default: highest spend first
+
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    statusEl.textContent = "Loading file...";
+    try {
+      const text = await file.text();
+      rawReceipts = JSON.parse(text);
+
+      initFilters(rawReceipts);
+      applyFiltersAndRender();
+
+      statusEl.textContent = `Loaded ${rawReceipts.length} receipts ✅`;
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = "Error reading JSON ❌";
+    }
+  });
+
+  resetFiltersBtn.addEventListener("click", () => {
+    initFilters(rawReceipts, true);
+    matchingItemSearchEl.value = "";
+    globalItemSearchEl.value = "";
+    receiptSearchEl.value = "";
+    matchingSort = { key: "net", dir: "desc" };
+    applyFiltersAndRender();
+  });
+
+  applyFiltersBtn.addEventListener("click", () => applyFiltersAndRender());
+
+  receiptSearchEl.addEventListener("input", () => renderReceiptList());
+  globalItemSearchEl.addEventListener("input", () => renderMatchingItemsTable());
+  matchingItemSearchEl.addEventListener("input", () => renderMatchingItemsTable());
+
+  clearMatchingSearchBtn.addEventListener("click", () => {
+    matchingItemSearchEl.value = "";
+    renderMatchingItemsTable();
+    matchingItemSearchEl.focus();
+  });
+
+  // NEW: Sort header handlers
+  document.querySelectorAll("th.sortable").forEach(th => {
+    th.addEventListener("click", () => {
+      const key = th.dataset.sort;
+      if (!key) return;
+
+      if (matchingSort.key === key) {
+        matchingSort.dir = matchingSort.dir === "asc" ? "desc" : "asc";
+      } else {
+        matchingSort.key = key;
+        matchingSort.dir = (key === "name") ? "asc" : "desc";
+      }
+      updateSortIndicators();
+      renderMatchingItemsTable();
+    });
+  });
+
+  function updateSortIndicators() {
+    const keys = ["name", "qty", "unit", "net"];
+    keys.forEach(k => {
+      const el = document.getElementById(`sortInd-${k}`);
+      if (!el) return;
+      if (matchingSort.key !== k) {
+        el.textContent = "";
+      } else {
+        el.textContent = matchingSort.dir === "asc" ? "▲" : "▼";
+      }
+    });
+  }
+
+  function initFilters(receipts, forceReset=false) {
+    if (!receipts || !receipts.length) return;
+
+    const parsedDates = receipts.map(r => parseReceiptDate(r)).filter(Boolean).sort();
+    const minDate = parsedDates[0];
+    const maxDate = parsedDates[parsedDates.length - 1];
+
+    if (forceReset || !dateFromEl.value) dateFromEl.value = minDate;
+    if (forceReset || !dateToEl.value) dateToEl.value = maxDate;
+
+    const warehouses = new Set();
+    receipts.forEach(r => {
+      const w = getWarehouse(r);
+      if (w) warehouses.add(w);
+    });
+
+    const prev = warehouseFilterEl.value || "ALL";
+    warehouseFilterEl.innerHTML = `<option value="ALL">All Warehouses</option>`;
+    [...warehouses].sort().forEach(w => {
+      const opt = document.createElement("option");
+      opt.value = w;
+      opt.textContent = w;
+      warehouseFilterEl.appendChild(opt);
+    });
+    warehouseFilterEl.value = warehouses.has(prev) ? prev : "ALL";
+  }
+
+  function applyFiltersAndRender() {
+    if (!rawReceipts.length) return;
+
+    const dateFrom = dateFromEl.value;
+    const dateTo = dateToEl.value;
+    const warehouse = warehouseFilterEl.value;
+    const receiptType = receiptTypeEl.value;
+
+    filteredReceipts = rawReceipts.filter(r => {
+      const d = parseReceiptDate(r);
+      if (!d) return false;
+
+      if (dateFrom && d < dateFrom) return false;
+      if (dateTo && d > dateTo) return false;
+
+      const w = getWarehouse(r);
+      if (warehouse !== "ALL" && w !== warehouse) return false;
+
+      const txType = (r.transactionType || "").toLowerCase();
+      const isRefund = txType === "refund";
+      if (receiptType === "PURCHASE" && isRefund) return false;
+      if (receiptType === "REFUND" && !isRefund) return false;
+
+      return true;
+    });
+
+    normalizedItems = normalizeReceipts(filteredReceipts);
+    categories = groupByCategory(normalizedItems);
+
+    renderStats(normalizedItems, filteredReceipts);
+    renderCategoryTiles(categories);
+    renderDiscountTiles(normalizedItems);
+    renderCharts(filteredReceipts, categories);
+    renderReceiptList();
+
+    updateSortIndicators();
+    renderMatchingItemsTable();
+
+    // Clear detail panes
+    receiptDetailEl.innerHTML = `<p class="small">Select a receipt on the left.</p>`;
+    priceHistoryTitleEl.textContent = `Price History`;
+    priceHistorySubEl.textContent = `Select an item`;
+    priceHistoryMetaEl.textContent = "";
+    if (priceChart) { priceChart.destroy(); priceChart = null; }
+  }
+
+  /**
+   * NORMALIZATION
+   * Applies TPD/#### discounts back to itemNumber lines within the same receipt.
+   * Excludes net returned items (qty <= 0) from ranking set.
+   */
+  function normalizeReceipts(receipts) {
+    const itemMap = new Map();
+
+    receipts.forEach(receipt => {
+      const items = receipt.itemArray || [];
+      const discountMap = new Map();
+
+      items.forEach(line => {
+        const actual = (line.itemActualName || "").toString();
+        const amt = Number(line.amount || 0);
+        if (actual.startsWith("TPD/")) {
+          const targetItem = actual.replace("TPD/", "").trim();
+          if (!targetItem) return;
+          discountMap.set(targetItem, (discountMap.get(targetItem) || 0) + amt);
+        }
+      });
+
+      items.forEach(line => {
+        const actual = (line.itemActualName || "").toString();
+        if (actual.startsWith("TPD/")) return;
+
+        const itemNumber = String(line.itemNumber || "").trim();
+        if (!itemNumber) return;
+
+        const qty = Number(line.unit || 0);
+        const gross = Number(line.amount || 0);
+        const discount = discountMap.get(itemNumber) || 0;
+
+        const dept = Number(line.transDepartmentNumber || line.itemDepartmentNumber || 0);
+        const name = (line.itemDescription01 || line.itemActualName || "Unknown").toString().trim();
+
+        if (!itemMap.has(itemNumber)) {
+          itemMap.set(itemNumber, { itemNumber, name, dept, qty: 0, gross: 0, discounts: 0, receiptCount: 0 });
+        }
+
+        const agg = itemMap.get(itemNumber);
+        agg.qty += qty;
+        agg.gross += gross;
+        agg.discounts += discount;
+        agg.receiptCount += 1;
+      });
+    });
+
+    const result = [];
+    for (const agg of itemMap.values()) {
+      const net = agg.gross + agg.discounts;
+      const unitPrice = agg.qty !== 0 ? (net / agg.qty) : 0;
+      if (agg.qty <= 0) continue;
+      result.push({ ...agg, net, unitPrice });
+    }
+
+    result.sort((a,b) => b.net - a.net);
+    return result;
+  }
+
+  function groupByCategory(items) {
+    const catMap = new Map();
+    items.forEach(it => {
+      const cat = deptName(it.dept);
+      if (!catMap.has(cat)) catMap.set(cat, []);
+      catMap.get(cat).push(it);
+    });
+
+    return [...catMap.entries()].map(([cat, list]) => ({
+      cat,
+      total: list.reduce((sum, i) => sum + i.net, 0),
+      items: list.sort((a,b) => b.net - a.net)
+    })).sort((a,b) => b.total - a.total);
+  }
+
+  function computeOutliers(categories, sigma=2.5) {
+    const outlierSet = new Set();
+    categories.forEach(cat => {
+      const prices = cat.items.map(i => i.unitPrice).filter(p => Number.isFinite(p) && p > 0);
+      if (prices.length < 6) return;
+
+      const mean = prices.reduce((a,b) => a+b, 0) / prices.length;
+      const variance = prices.reduce((sum,p) => sum + Math.pow(p-mean,2), 0) / prices.length;
+      const std = Math.sqrt(variance);
+      const threshold = mean + sigma * std;
+
+      cat.items.forEach(i => { if (i.unitPrice > threshold) outlierSet.add(i.itemNumber); });
+    });
+    return outlierSet;
+  }
+
+  function renderStats(items, receipts) {
+    const netSpend = items.reduce((s,i) => s + i.net, 0);
+    const grossSpend = items.reduce((s,i) => s + i.gross, 0);
+    const discounts = items.reduce((s,i) => s + i.discounts, 0);
+    const uniqueItems = items.length;
+    const totalQty = items.reduce((s,i) => s + i.qty, 0);
+
+    statsEl.innerHTML = `
+      <div class="stat"><div class="k">Receipts (filtered)</div><div class="v">${receipts.length}</div></div>
+      <div class="stat"><div class="k">Unique Items (net)</div><div class="v">${uniqueItems}</div></div>
+      <div class="stat"><div class="k">Total Qty (net)</div><div class="v">${totalQty.toFixed(0)}</div></div>
+      <div class="stat"><div class="k">Gross Spend</div><div class="v">${formatMoney(grossSpend)}</div></div>
+      <div class="stat"><div class="k">Instant Savings</div><div class="v">${formatMoney(discounts)}</div></div>
+      <div class="stat"><div class="k">Net Spend</div><div class="v">${formatMoney(netSpend)}</div></div>
+    `;
+  }
+
+  function renderCategoryTiles(categories) {
+    categoryTilesEl.innerHTML = "";
+    const topN = topNEl.value;
+    const sigma = Number(outlierSigmaEl.value || 2.5);
+    const outlierSet = computeOutliers(categories, sigma);
+    const displayCats = categories.slice(0, 12);
+
+    displayCats.forEach(block => {
+      const list = (topN === "ALL") ? block.items : block.items.slice(0, Number(topN));
+
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <h2>${escapeHtml(block.cat)}</h2>
+        <p class="subtitle">
+          Total: <span class="money">${formatMoney(block.total)}</span>
+          <span class="pill">${block.items.length} items</span>
+        </p>
+        <div class="scroll-list" style="max-height: 380px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Unit</th>
+                <th>Net</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.map(i => {
+                const isOutlier = outlierSet.has(i.itemNumber);
+                return `
+                  <tr class="click-row" data-item="${escapeHtml(i.itemNumber)}">
+                    <td>
+                      ${escapeHtml(i.name)}
+                      ${isOutlier ? `<span class="pill warn">Outlier</span>` : ""}
+                      <span class="pill clickable">#${escapeHtml(i.itemNumber)}</span>
+                    </td>
+                    <td>${i.qty}</td>
+                    <td class="money">${formatMoney(i.unitPrice)}</td>
+                    <td class="money">${formatMoney(i.net)}</td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+        <div class="hint">Click a row to view this item’s price history.</div>
+      `;
+
+      card.addEventListener("click", (e) => {
+        const row = e.target.closest("tr[data-item]");
+        if (!row) return;
+        renderPriceHistory(row.dataset.item);
+      });
+
+      categoryTilesEl.appendChild(card);
+    });
+  }
+
+  function renderDiscountTiles(items) {
+    discountTilesEl.innerHTML = "";
+
+    const discounted = items
+      .filter(i => i.discounts < 0)
+      .sort((a,b) => Math.abs(b.discounts) - Math.abs(a.discounts))
+      .slice(0, 12);
+
+    discounted.forEach(i => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <h2>${escapeHtml(i.name)}</h2>
+        <p class="subtitle">
+          Item #${escapeHtml(i.itemNumber)} • Qty ${i.qty}
+          <span class="pill clickable" data-item="${escapeHtml(i.itemNumber)}">Price history</span>
+        </p>
+        <div style="display:grid; gap:8px;">
+          <div><span class="k">Discount</span>: <span class="money neg">${formatMoney(i.discounts)}</span></div>
+          <div><span class="k">Net Spend</span>: <span class="money">${formatMoney(i.net)}</span></div>
+          <div><span class="k">Unit Price</span>: <span class="money">${formatMoney(i.unitPrice)}</span></div>
+        </div>
+      `;
+      card.addEventListener("click", (e) => {
+        const pill = e.target.closest("[data-item]");
+        if (!pill) return;
+        renderPriceHistory(pill.dataset.item);
+      });
+      discountTilesEl.appendChild(card);
+    });
+  }
+
+  function renderReceiptList() {
+    receiptListEl.innerHTML = "";
+    const q = (receiptSearchEl.value || "").trim().toLowerCase();
+
+    const rows = filteredReceipts
+      .map(r => {
+        const date = parseReceiptDate(r) || "Unknown";
+        const wh = getWarehouse(r) || "—";
+        const type = (r.transactionType || "Purchase").toString();
+        const totals = computeReceiptTotals(r);
+        return { r, date, wh, type, total: totals.net };
+      })
+      .sort((a,b) => (b.date || "").localeCompare(a.date || ""))
+      .filter(x => {
+        if (!q) return true;
+        const hay = `${x.date} ${x.wh} ${x.type}`.toLowerCase();
+        return hay.includes(q);
+      });
+
+    rows.forEach(x => {
+      const tr = document.createElement("tr");
+      tr.className = "click-row";
+      tr.innerHTML = `
+        <td>${escapeHtml(x.date)}</td>
+        <td>${escapeHtml(x.wh)}</td>
+        <td>${escapeHtml(x.type)}</td>
+        <td class="money">${formatMoney(x.total)}</td>
+      `;
+      tr.addEventListener("click", () => renderReceiptDetail(x.r));
+      receiptListEl.appendChild(tr);
+    });
+
+    if (!rows.length) {
+      receiptListEl.innerHTML = `<tr><td colspan="4" class="small">No receipts match your search.</td></tr>`;
+    }
+  }
+
+  function computeReceiptTotals(receipt) {
+    const lines = receipt.itemArray || [];
+    let gross = 0;
+    let disc = 0;
+
+    lines.forEach(line => {
+      const actual = (line.itemActualName || "").toString();
+      const amt = Number(line.amount || 0);
+      if (actual.startsWith("TPD/")) disc += amt;
+      else gross += amt;
+    });
+
+    return { gross, disc, net: gross + disc };
+  }
+
+  function renderReceiptDetail(receipt) {
+    const date = parseReceiptDate(receipt) || "Unknown date";
+    const wh = getWarehouse(receipt) || "Unknown warehouse";
+    const type = (receipt.transactionType || "Purchase").toString();
+    const totals = computeReceiptTotals(receipt);
+
+    const lines = receipt.itemArray || [];
+    const discountMap = new Map();
+
+    lines.forEach(line => {
+      const actual = (line.itemActualName || "").toString();
+      const amt = Number(line.amount || 0);
+      if (actual.startsWith("TPD/")) {
+        const target = actual.replace("TPD/", "").trim();
+        if (!target) return;
+        discountMap.set(target, (discountMap.get(target) || 0) + amt);
+      }
+    });
+
+    const realItems = [];
+    const discountLines = [];
+
+    lines.forEach(line => {
+      const actual = (line.itemActualName || "").toString();
+      if (actual.startsWith("TPD/")) discountLines.push(line);
+      else realItems.push(line);
+    });
+
+    const realRows = realItems.map(line => {
+      const itemNumber = String(line.itemNumber || "").trim();
+      const name = (line.itemDescription01 || line.itemActualName || "Unknown").toString().trim();
+      const qty = Number(line.unit || 0);
+      const gross = Number(line.amount || 0);
+      const disc = discountMap.get(itemNumber) || 0;
+      const net = gross + disc;
+      return { itemNumber, name, qty, gross, disc, net };
+    });
+
+    receiptDetailEl.innerHTML = `
+      <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom: 10px;">
+        <span class="pill">${escapeHtml(date)}</span>
+        <span class="pill">${escapeHtml(wh)}</span>
+        <span class="pill">${escapeHtml(type)}</span>
+        <span class="pill">Gross: <span class="money">${formatMoney(totals.gross)}</span></span>
+        <span class="pill">Discounts: <span class="money neg">${formatMoney(totals.disc)}</span></span>
+        <span class="pill">Net: <span class="money">${formatMoney(totals.net)}</span></span>
+      </div>
+
+      <div class="scroll-list" style="max-height: 420px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Qty</th>
+              <th>Gross</th>
+              <th>Disc</th>
+              <th>Net</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${
+              realRows.length
+              ? realRows.map(r => `
+                <tr class="click-row" data-item="${escapeHtml(r.itemNumber)}">
+                  <td>
+                    ${escapeHtml(r.name)}
+                    <span class="pill clickable">#${escapeHtml(r.itemNumber)}</span>
+                  </td>
+                  <td>${r.qty}</td>
+                  <td class="money">${formatMoney(r.gross)}</td>
+                  <td class="money ${r.disc < 0 ? 'neg' : ''}">${formatMoney(r.disc)}</td>
+                  <td class="money">${formatMoney(r.net)}</td>
+                </tr>
+              `).join("")
+              : `<tr><td colspan="5" class="small">No item lines found.</td></tr>`
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 12px;">
+        <h3 style="margin: 10px 0 6px; font-size: 0.95rem;">Discount Lines (TPD)</h3>
+        <div class="scroll-list" style="max-height: 160px;">
+          <table>
+            <thead>
+              <tr>
+                <th>TPD Ref</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${
+                discountLines.length
+                ? discountLines.map(d => `
+                  <tr>
+                    <td>${escapeHtml(d.itemActualName || "TPD")}</td>
+                    <td class="money neg">${formatMoney(Number(d.amount || 0))}</td>
+                  </tr>
+                `).join("")
+                : `<tr><td colspan="2" class="small">No instant savings lines on this receipt.</td></tr>`
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="hint">Click any item row above to see its price history.</div>
+    `;
+
+    receiptDetailEl.querySelectorAll("tr[data-item]").forEach(tr => {
+      tr.addEventListener("click", () => renderPriceHistory(tr.dataset.item));
+    });
+  }
+
+  /**
+   * ✅ NEW: Matching Items table renderer (with inline search + sorting)
+   */
+  function renderMatchingItemsTable() {
+    const qGlobal = (globalItemSearchEl.value || "").trim().toLowerCase();
+    const qLocal = (matchingItemSearchEl.value || "").trim().toLowerCase();
+    const q = qLocal || qGlobal; // local takes priority
+
+    let list = normalizedItems;
+
+    if (q) {
+      list = list.filter(i => {
+        return (
+          i.itemNumber.toLowerCase().includes(q) ||
+          i.name.toLowerCase().includes(q)
+        );
+      });
+    }
+
+    // Sort
+    list = list.slice().sort((a,b) => compareItems(a, b, matchingSort.key, matchingSort.dir));
+
+    // Render (limit to keep UI snappy)
+    const limit = 250;
+    const shown = list.slice(0, limit);
+
+    itemResultsEl.innerHTML = shown.length
+      ? shown.map(i => `
+        <tr class="click-row" data-item="${escapeHtml(i.itemNumber)}">
+          <td>
+            ${escapeHtml(i.name)}
+            <span class="pill clickable">#${escapeHtml(i.itemNumber)}</span>
+          </td>
+          <td>${i.qty}</td>
+          <td class="money">${formatMoney(i.unitPrice)}</td>
+          <td class="money">${formatMoney(i.net)}</td>
+        </tr>
+      `).join("")
+      : `<tr><td colspan="4" class="small">No items match your search.</td></tr>`;
+
+    itemResultsEl.querySelectorAll("tr[data-item]").forEach(tr => {
+      tr.addEventListener("click", () => renderPriceHistory(tr.dataset.item));
+    });
+  }
+
+  function compareItems(a, b, key, dir) {
+    const mul = dir === "asc" ? 1 : -1;
+
+    if (key === "name") {
+      return mul * a.name.localeCompare(b.name);
+    }
+
+    if (key === "qty") {
+      return mul * ((a.qty || 0) - (b.qty || 0));
+    }
+
+    if (key === "unit") {
+      return mul * ((a.unitPrice || 0) - (b.unitPrice || 0));
+    }
+
+    // default net
+    return mul * ((a.net || 0) - (b.net || 0));
+  }
+
+  /**
+   * ✅ Updated Price History:
+   * - only unit price plotted
+   * - point size encodes quantity
+   * - tooltip shows qty, net, discount
+   * - auto-scroll + glow highlight
+   */
+  function renderPriceHistory(itemNumber) {
+    if (!itemNumber) return;
+
+    const agg = normalizedItems.find(i => i.itemNumber === itemNumber);
+    const name = agg ? agg.name : `Item #${itemNumber}`;
+
+    const events = [];
+
+    filteredReceipts.forEach(r => {
+      const date = parseReceiptDate(r);
+      if (!date) return;
+
+      const lines = r.itemArray || [];
+      const discountMap = new Map();
+
+      lines.forEach(line => {
+        const actual = (line.itemActualName || "").toString();
+        const amt = Number(line.amount || 0);
+        if (actual.startsWith("TPD/")) {
+          const target = actual.replace("TPD/", "").trim();
+          if (!target) return;
+          discountMap.set(target, (discountMap.get(target) || 0) + amt);
+        }
+      });
+
+      lines.forEach(line => {
+        const actual = (line.itemActualName || "").toString();
+        if (actual.startsWith("TPD/")) return;
+
+        const num = String(line.itemNumber || "").trim();
+        if (num !== itemNumber) return;
+
+        const qty = Number(line.unit || 0);
+        const gross = Number(line.amount || 0);
+        const disc = discountMap.get(itemNumber) || 0;
+        const net = gross + disc;
+        const unitPrice = qty !== 0 ? (net / qty) : 0;
+
+        events.push({ date, qty, gross, disc, net, unitPrice });
+      });
+    });
+
+    events.sort((a,b) => a.date.localeCompare(b.date));
+
+    priceHistoryTitleEl.textContent = "Price History";
+    priceHistorySubEl.textContent = `${name}  •  #${itemNumber}`;
+
+    if (!events.length) {
+      priceHistoryMetaEl.textContent = "No purchase/refund events found for this item under current filters.";
+      if (priceChart) { priceChart.destroy(); priceChart = null; }
+      return;
+    }
+
+    // ✅ Scroll + glow highlight
+    const priceHistoryCard = document.getElementById("priceHistoryCard");
+    priceHistoryCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    priceHistoryCard.classList.remove("flash");
+    void priceHistoryCard.offsetWidth;
+    priceHistoryCard.classList.add("flash");
+
+    const labels = events.map(e => e.date);
+    const unitSeries = events.map(e => e.unitPrice);
+
+    // quantity -> point size
+    const qtyVals = events.map(e => Math.abs(e.qty || 0));
+    const minQty = Math.min(...qtyVals);
+    const maxQty = Math.max(...qtyVals);
+
+    function scalePointSize(q) {
+      if (maxQty === minQty) return 6;
+      const t = (q - minQty) / (maxQty - minQty);
+      return 6 + t * 10;
+    }
+
+    const pointSizes = events.map(e => scalePointSize(Math.abs(e.qty || 0)));
+
+    const totalQty = events.reduce((s,e) => s + e.qty, 0);
+    const totalNet = events.reduce((s,e) => s + e.net, 0);
+    const totalDisc = events.reduce((s,e) => s + e.disc, 0);
+
+    priceHistoryMetaEl.innerHTML = `
+      <div style="margin-top: 10px; display:flex; flex-wrap:wrap; gap:10px;">
+        <span class="pill">Events: <span class="money">${events.length}</span></span>
+        <span class="pill">Net Qty: <span class="money">${totalQty.toFixed(0)}</span></span>
+        <span class="pill">Total Net: <span class="money">${formatMoney(totalNet)}</span></span>
+        <span class="pill">Total Disc: <span class="money neg">${formatMoney(totalDisc)}</span></span>
+      </div>
+      <div class="hint">Tip: point size represents quantity. Hover for full details.</div>
+    `;
+
+    if (priceChart) priceChart.destroy();
+
+    priceChart = new Chart(document.getElementById("priceHistoryChart"), {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "Unit Price",
+          data: unitSeries,
+          pointRadius: pointSizes,
+          pointHoverRadius: pointSizes.map(s => s + 2),
+          tension: 0.25
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const i = ctx.dataIndex;
+                const e = events[i];
+                return [
+                  `Unit Price: ${formatMoney(e.unitPrice)}`,
+                  `Qty: ${e.qty}`,
+                  `Net: ${formatMoney(e.net)}`,
+                  `Discount: ${formatMoney(e.disc)}`
+                ];
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            title: { display: true, text: "Unit Price" },
+            ticks: { callback: (v) => formatMoney(v) }
+          },
+          x: { title: { display: true, text: "Date" } }
+        }
+      }
+    });
+  }
+
+  function renderCharts(receipts, categories) {
+    const monthSpend = new Map();
+    const monthDiscount = new Map();
+
+    receipts.forEach(r => {
+      const d = parseReceiptDate(r);
+      if (!d) return;
+      const month = d.slice(0,7);
+
+      const lines = r.itemArray || [];
+      let gross = 0;
+      let disc = 0;
+
+      lines.forEach(line => {
+        const actual = (line.itemActualName || "").toString();
+        const amt = Number(line.amount || 0);
+        if (actual.startsWith("TPD/")) disc += amt;
+        else gross += amt;
+      });
+
+      monthSpend.set(month, (monthSpend.get(month) || 0) + (gross + disc));
+      monthDiscount.set(month, (monthDiscount.get(month) || 0) + disc);
+    });
+
+    const months = [...monthSpend.keys()].sort();
+    const spendVals = months.map(m => monthSpend.get(m) || 0);
+    const discountVals = months.map(m => monthDiscount.get(m) || 0);
+
+    const catLabels = categories.slice(0, 12).map(c => c.cat);
+    const catVals = categories.slice(0, 12).map(c => c.total);
+
+    Object.values(charts).forEach(ch => ch?.destroy?.());
+
+    charts.spendOverTime = new Chart(document.getElementById("spendOverTime"), {
+      type: "line",
+      data: { labels: months, datasets: [{ label: "Net Spend", data: spendVals }] },
+      options: { responsive: true, plugins: { legend: { display: true } } }
+    });
+
+    charts.categoryShare = new Chart(document.getElementById("categoryShare"), {
+      type: "doughnut",
+      data: { labels: catLabels, datasets: [{ label: "Category Spend", data: catVals }] },
+      options: { responsive: true }
+    });
+
+    charts.discountTrend = new Chart(document.getElementById("discountTrend"), {
+      type: "bar",
+      data: { labels: months, datasets: [{ label: "Instant Savings", data: discountVals }] },
+      options: { responsive: true, plugins: { legend: { display: true } } }
+    });
+  }
+
+  // Helpers
+  function formatMoney(v) {
+    return (v || 0).toLocaleString("en-CA", { style: "currency", currency: "CAD" });
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, s => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[s]));
+  }
+
+  function getWarehouse(r) {
+    return (r.warehouseName || r.warehouse || r.warehouseNumber || "").toString().trim();
+  }
+
+  function parseReceiptDate(r) {
+    const raw =
+      r.receiptDate ||
+      r.transactionDate ||
+      r.date ||
+      r.transactionDateTime ||
+      r.transactionDateTimeLocal ||
+      r.receiptDateTime ||
+      null;
+
+    if (!raw) return null;
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+    const dt = new Date(raw);
+    if (!isNaN(dt.getTime())) {
+      const yyyy = dt.getFullYear();
+      const mm = String(dt.getMonth() + 1).padStart(2, "0");
+      const dd = String(dt.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    return null;
+  }
+
+  function deptName(dept) {
+    const map = {
+      12: "Grocery / Snacks",
+      13: "Grocery / Pantry",
+      14: "Household",
+      17: "Dairy / Fridge",
+      18: "Frozen",
+      20: "Health / Beauty",
+      23: "Home / Hardware",
+      26: "Clothing / Accessories",
+      31: "Apparel",
+      34: "Bedding",
+      39: "Sports / Apparel",
+      65: "Produce",
+      93: "Pharmacy / Supplements"
+    };
+    return map[dept] || `Department ${dept}`;
+  }
+</script>
+
+</body>
+</html>
