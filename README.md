@@ -25,7 +25,7 @@ Method 2 - Use the JS linked in the repository - https://github.com/creativerbl/
    *   3. Open Developer Tools (F12 or Cmd/Ctrl + Shift + I) and go to the 'Console' tab.
    *   4. Paste in this entire script and press Enter.
    *   5. Click one of the two on-screen buttons (lower-right corner of the webpage):
-   *      ↳ If this is your first run, click the 'Start Fresh (No File)' button.
-   *      ↳ If you're re-running this script, click the 'Load Existing Receipt File' button.
+   *      - If this is your first run, click the 'Start Fresh (No File)' button.
+   *      - If you're re-running this script, click the 'Load Existing Receipt File' button.
 
 
