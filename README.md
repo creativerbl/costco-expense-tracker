@@ -27,5 +27,5 @@ Method 2 - Use the JS linked in the repository - https://github.com/creativerbl/
    *   5. Click one of the two on-screen buttons (lower-right corner of the webpage):
    *      ↳ If this is your first run, click the 'Start Fresh (No File)' button.
    *      ↳ If you're re-running this script, click the 'Load Existing Receipt File' button.
-   *
+
 
