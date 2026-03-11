@@ -1,5 +1,6 @@
   /**
    * ==============================================================================
+   * Credits
    * Project:       TechStud's Costco Receipt Downloader (TCRD)
    * Description:   Automates the retrieval of Costco In-Warehouse receipts for the logged-in member.
    * Features:      
