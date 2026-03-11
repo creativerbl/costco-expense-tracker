@@ -18,6 +18,7 @@ https://creativerbl.github.io/costco-expense-tracker/
 
 ## How to
 Method 1 - Use the chrome extension to download JSON - https://chromewebstore.google.com/detail/costco-receipts-downloade/nnalnbomehfogoleegpfegaeoofheemn?pli=1
+
 Method 2 - Use the JS linked in the repository - https://github.com/creativerbl/costco-expense-tracker/blob/main/costco_receipt_downloader.js
   * Usage:
    *   1. Log in to your regional Costco website (eg: costco.ca, costco.com, costco.co.uk, ...).
